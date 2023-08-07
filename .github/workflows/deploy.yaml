@@ -1,0 +1,92 @@
+name: Test MultiK8s
+on:
+  push:
+    branches:
+      - master
+
+env:
+  SHA: $(git rev-parse HEAD)
+
+jobs:
+  Multi-cluster-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      #- name: Build Images
+        #run:  |-
+        #  docker build -t braulioarredondo/multi-client-k8s:latest -t braulioarredondo/multi-client-k8s:${{ env.SHA }} -f ./client/Dockerfile ./client
+        #  docker build -t braulioarredondo/multi-server-k8s:latest -t braulioarredondo/multi-server-k8s:${{ env.SHA }} -f ./server/Dockerfile ./server
+        #  docker build -t braulioarredondo/multi-worker-k8s:latest -t braulioarredondo/multi-worker-k8s:${{ env.SHA }} -f ./worker/Dockerfile ./worker
+
+      #- name: Test
+        #run: |-
+        #  docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+        #  docker build -t braulioarredondo/react-test -f ./client/Dockerfile.dev ./client
+        #  docker run -e CI=true braulioarredondo/react-test npm test
+
+      #- name: Push
+        #run: |-
+        #  docker push braulioarredondo/multi-client-k8s:latest
+        #  docker push braulioarredondo/multi-server-k8s:latest
+        #  docker push braulioarredondo/multi-worker-k8s:latest
+
+        #  docker push braulioarredondo/multi-client-k8s:${{ env.SHA }}
+        #  docker push braulioarredondo/multi-server-k8s:${{ env.SHA }}
+        #  docker push braulioarredondo/multi-worker-k8s:${{ env.SHA }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SCRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      - name: Deploy to AWS CloudFormation
+        # Cloudformation template deploys multiple roles that need the capabilites flag. 
+        # We use the cloufromation command since aws-actions/aws-cloudformation-github-deploy@v1 is not compatible with capabilities flag.
+        run: |-
+          aws cloudformation create-stack --stack-name multi-cluster \
+          --template-body file://multi-cluster.yaml \
+          --parameters ParameterKey=EKSClusterName,ParameterValue=multi-cluster \
+          ParameterKey=MasterUserPassword,ParameterValue={{ secrets.PGPASSWORD }} \
+          --capabilities CAPABILITY_NAMED_IAM
+
+          aws cloudformation wait stack-create-complete --stack-name multi-cluster
+          aws eks update-kubeconfig --region us-east-1 --name multi-cluster
+
+      - name: Configure EKS Cluster
+        # Installing Helm, nginx ingress, pgpassword secret, CSI Addon for ebs storage clase driver and apply k8s template configurations.
+        run: |-    
+          curl -fsSL -o get_helm.sh https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3
+          chmod 700 get_helm.sh
+          ./get_helm.sh
+          
+          helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+          helm install my-release ingress-nginx/ingress-nginx
+          kubectl create secret generic pgpassword --from-literal PGPASSWORD=${{ secrets.PGPASSWORD }}
+
+          DBINSTANCEIDENTIFIER="multi-cluster-db"
+          PG_RDS_ENDPOINT_ADDRESS=$(aws rds describe-db-instances \
+          --query 'DBInstances[*].[Endpoint.Address]' \
+          --filters Name=db-instance-id,Values=$DBINSTANCEIDENTIFIER \
+          --output text)
+
+          REDISIDENTIFIER="multi-cluster-redis"
+          REDIS_ENDPOINT_ADDRESS=$(aws elasticache describe-cache-clusters \
+          --cache-cluster-id '$REDISIDENTIFIER'-001 \
+          --show-cache-node-info \
+          --query 'CacheClusters[].CacheNodes[].Endpoint[].Address' \
+          --output text)
+          
+          sleep 60s
+          cat postgres-cluster-ip-service.yaml | sed "s/{{PG_RDS_ENDPOINT_ADDRESS}}/$PG_RDS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
+          cat redis-cluster-ip-service.yaml | sed "s/{{REDIS_ENDPOINT_ADDRESS}}/$REDIS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
+          kubectl apply -f ./k8s
+
+          sleep 180s
+
+      - name: Get Ingress URL
+        # Get EKS Ingress Service URL
+        run: |-   
+          kubectl get service my-release-ingress-nginx-controller

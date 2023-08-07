@@ -1,0 +1,22 @@
+name: Test MultiK8s
+on:
+  push:
+    branches:
+      - '!master'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Build Images
+        run: |-
+          docker build -t braulioarredondo/multi-client-k8s:latest -t braulioarredondo/multi-client-k8s:${{ env.SHA }} -f ./client/Dockerfile ./client
+          docker build -t braulioarredondo/multi-server-k8s:latest -t braulioarredondo/multi-server-k8s:${{ env.SHA }} -f ./server/Dockerfile ./server
+          docker build -t braulioarredondo/multi-worker-k8s:latest -t braulioarredondo/multi-worker-k8s:${{ env.SHA }} -f ./worker/Dockerfile ./worker
+
+      - name: Run Test
+        run: |-
+          docker build -t braulioarredondo/react-test -f ./client/Dockerfile.dev ./client
+          docker run -e CI=true braulioarredondo/react-test npm test
