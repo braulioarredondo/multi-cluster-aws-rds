@@ -451,7 +451,7 @@ Resources:
   #============================================================================#
   # Worker nodes (auto-scaling group)
   #============================================================================#
-
+  """
   WorkerNodesAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     UpdatePolicy:
@@ -467,16 +467,17 @@ Resources:
         - !Ref PrivateSubnet2
       Tags:
         - Key: Name
-          Value: !Sub "${AWS::StackName}-WorkerNodesAutoScalingGroup"
+          Value: !Sub '${AWS::StackName}-WorkerNodesAutoScalingGroup'
           PropagateAtLaunch: true
         # Without this tag, worker nodes are unable to join the cluster:
-        - Key: !Sub "kubernetes.io/cluster/${ControlPlane}"
-          Value: "owned"
+        - Key: !Sub 'kubernetes.io/cluster/${ControlPlane}''
+          Value: 'owned'
           PropagateAtLaunch: true
     DependsOn:
       - WorkerNodesLaunchConfiguration
       - PrivateSubnet1
       - PrivateSubnet2
+  """    
   WorkerNodesRole:
     Type: AWS::IAM::Role
     Properties:
@@ -515,6 +516,7 @@ Resources:
       - WorkerNodesRole
       - PrivateSubnet1
       - PrivateSubnet2
+  """    
   WorkerNodesLaunchConfiguration:
     Type: AWS::AutoScaling::LaunchConfiguration
     # Wait until cluster is ready before launching worker nodes
@@ -538,6 +540,7 @@ Resources:
         - !Ref WorkerNodesRole
     DependsOn:
       - WorkerNodesRole
+  """   
     #============================================================================#
   # Postgres RDS
   #============================================================================#
