@@ -577,7 +577,7 @@ Resources:
           - 
             DeviceIndex: 0
             AssociatePublicIpAddress: false
-            SubnetId: !Select [0, !Ref Subnets]
+            #SubnetId: !Select [0, !Ref Subnets]
             Groups: 
               - !Ref WorkerNodesSecurityGroup 
         ImageId: !FindInMap
