@@ -568,7 +568,7 @@ Resources:
               - Key: Name
                 Value: !Sub "${EKSClusterName}-ASG-Node"
               - Key: KubernetesCluster
-                Value: !Ref ClusterName
+                Value: !Ref EKSClusterName
               - Key: !Sub 'kubernetes.io/cluster/${ControlPlane}'
                 Value: 'owned'
         IamInstanceProfile: 
