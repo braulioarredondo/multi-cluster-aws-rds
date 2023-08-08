@@ -471,10 +471,9 @@ Resources:
       MaxSize: !Ref MaxNumWorkerNodes
       #LaunchConfigurationName: !Ref WorkerNodesLaunchConfiguration
       LaunchTemplate:
-          LaunchTemplateSpecification: 
-            LaunchTemplateId: !Ref WorkerNodeLaunchTemplate
+          LaunchTemplateId: !Ref WorkerNodeLaunchTemplate
             #LaunchTemplateName: String
-            Version: !GetAtt WorkerNodeLaunchTemplate.LatestVersionNumber
+          Version: !GetAtt WorkerNodeLaunchTemplate.LatestVersionNumber
       VPCZoneIdentifier:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
