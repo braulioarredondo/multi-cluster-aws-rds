@@ -5,7 +5,11 @@ Parameters:
     Type: String
     Description: Name of k8s cluster
     Default: multi-k8s-cluster
-  NumWorkerNodes:
+  MinNumWorkerNodes:
+    Type: Number
+    Description: Number of nodes to create
+    Default: 1  
+  MaxNumWorkerNodes:
     Type: Number
     Description: Number of nodes to create
     Default: 3
@@ -13,6 +17,10 @@ Parameters:
     Type: String
     Description: EC2 instance type for the worker nodes
     Default: t3.small   
+  WorkerNodeVolumeSize:
+    Type: String
+    Description: EC2 ebs size for the worker nodes
+    Default: 20  
   DBIdentifier:
     Type: String
     Default: multi-cluster-db
@@ -451,7 +459,7 @@ Resources:
   #============================================================================#
   # Worker nodes (auto-scaling group)
   #============================================================================#
-  """
+  
   WorkerNodesAutoScalingGroup:
     Type: AWS::AutoScaling::AutoScalingGroup
     UpdatePolicy:
@@ -459,9 +467,14 @@ Resources:
         MinInstancesInService: 1
         MaxBatchSize: 1
     Properties:
-      LaunchConfigurationName: !Ref WorkerNodesLaunchConfiguration
-      MinSize: !Ref NumWorkerNodes
-      MaxSize: !Ref NumWorkerNodes
+      MinSize: !Ref MinNumWorkerNodes
+      MaxSize: !Ref MaxNumWorkerNodes
+      #LaunchConfigurationName: !Ref WorkerNodesLaunchConfiguration
+      LaunchTemplate:
+          LaunchTemplateSpecification: 
+            LaunchTemplateId: !Ref WorkerNodeLaunchTemplate
+            #LaunchTemplateName: String
+            Version: !GetAtt WorkerNodeLaunchTemplate.LatestVersionNumber
       VPCZoneIdentifier:
         - !Ref PrivateSubnet1
         - !Ref PrivateSubnet2
@@ -474,10 +487,18 @@ Resources:
           Value: 'owned'
           PropagateAtLaunch: true
     DependsOn:
-      - WorkerNodesLaunchConfiguration
+      - WorkerNodeLaunchTemplate
       - PrivateSubnet1
       - PrivateSubnet2
-  """    
+
+  WorkerNodesInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Roles:
+        - !Ref WorkerNodesRole
+    DependsOn:
+      - WorkerNodesRole
+
   WorkerNodesRole:
     Type: AWS::IAM::Role
     Properties:
@@ -493,54 +514,87 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-
-  WorkerNodegroup:
-    Type: AWS::EKS::Nodegroup
-    Properties:
-      ClusterName: !Sub "${AWS::StackName}"
-      NodeRole: !GetAtt WorkerNodesRole.Arn
-      InstanceTypes:
-        - !Ref WorkerNodesInstanceType
-      ScalingConfig:
-        MinSize:
-          Ref: NumWorkerNodes
-        DesiredSize:
-          Ref: NumWorkerNodes
-        MaxSize:
-          Ref: NumWorkerNodes
-      Subnets:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-    DependsOn:
-      - ControlPlane
-      - WorkerNodesRole
-      - PrivateSubnet1
-      - PrivateSubnet2
-  """    
-  WorkerNodesLaunchConfiguration:
-    Type: AWS::AutoScaling::LaunchConfiguration
+  
+  #WorkerNodegroup:
+  #  Type: AWS::EKS::Nodegroup
+  #  Properties:
+  #    ClusterName: !Sub "${AWS::StackName}"
+  #    NodeRole: !GetAtt WorkerNodesRole.Arn
+  #    InstanceTypes:
+  #      - !Ref WorkerNodesInstanceType
+  #   ScalingConfig:
+  #      MinSize:
+  #        Ref: NumWorkerNodes
+  #      DesiredSize:
+  #        Ref: NumWorkerNodes
+  #      MaxSize:
+  #        Ref: NumWorkerNodes
+  #    Subnets:
+  #      - !Ref PrivateSubnet1
+  #      - !Ref PrivateSubnet2
+  #  DependsOn:
+  #    - ControlPlane
+  #    - WorkerNodesRole
+  #    - PrivateSubnet1
+  #    - PrivateSubnet2
+      
+  #WorkerNodesLaunchConfiguration:
+  #  Type: AWS::AutoScaling::LaunchConfiguration
     # Wait until cluster is ready before launching worker nodes
+  #  Properties:
+  #    AssociatePublicIpAddress: false
+  #    IamInstanceProfile: !Ref WorkerNodesInstanceProfile
+  #    ImageId: !FindInMap
+  #      - EksAmiIds
+  #      - !Ref AWS::Region
+  #      - Standard
+  #    InstanceType: !Ref WorkerNodesInstanceType
+  #    SecurityGroups:
+  #      - !Ref WorkerNodesSecurityGroup
+  #  DependsOn:
+  #    - ControlPlane  
+  #    - WorkerNodesSecurityGroup
+  WorkerNodeLaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
     Properties:
-      AssociatePublicIpAddress: false
-      IamInstanceProfile: !Ref WorkerNodesInstanceProfile
-      ImageId: !FindInMap
-        - EksAmiIds
-        - !Ref AWS::Region
-        - Standard
-      InstanceType: !Ref WorkerNodesInstanceType
-      SecurityGroups:
-        - !Ref WorkerNodesSecurityGroup
+      LaunchTemplateName: !Sub '${AWS::StackName}-LaunchTemplate'
+      LaunchTemplateData: 
+        # SecurityGroupIds: 
+        #   - !Ref NodeSecurityGroup
+        TagSpecifications: 
+          -
+            ResourceType: instance
+            Tags:
+              - Key: Name
+                Value: !Sub "${EKSClusterName}-ASG-Node"
+              - Key: KubernetesCluster
+                Value: !Ref ClusterName
+              - Key: !Sub 'kubernetes.io/cluster/${ControlPlane}'
+                Value: 'owned'
+        IamInstanceProfile: 
+          Arn: !GetAtt WorkerNodesInstanceProfile.Arn
+        NetworkInterfaces: 
+          - 
+            DeviceIndex: 0
+            AssociatePublicIpAddress: false
+            SubnetId: !Select [0, !Ref Subnets]
+            Groups: 
+              - !Ref WorkerNodesSecurityGroup 
+        ImageId: !FindInMap
+          - EksAmiIds
+          - !Ref AWS::Region
+          - Standard
+        InstanceType: !Ref WorkerNodesInstanceType
+        BlockDeviceMappings:
+          - DeviceName: /dev/xvda
+            Ebs:
+              VolumeSize: !Ref WorkerNodeVolumeSize
+              VolumeType: gp2
+              DeleteOnTermination: true   
     DependsOn:
       - ControlPlane  
-      - WorkerNodesSecurityGroup
-  WorkerNodesInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Roles:
-        - !Ref WorkerNodesRole
-    DependsOn:
-      - WorkerNodesRole
-  """   
+      - WorkerNodesInstanceProfile
+      - WorkerNodesSecurityGroup        
     #============================================================================#
   # Postgres RDS
   #============================================================================#
