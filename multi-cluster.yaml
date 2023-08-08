@@ -483,7 +483,7 @@ Resources:
           Value: !Sub '${AWS::StackName}-WorkerNodesAutoScalingGroup'
           PropagateAtLaunch: true
         # Without this tag, worker nodes are unable to join the cluster:
-        - Key: !Sub 'kubernetes.io/cluster/${ControlPlane}''
+        - Key: !Sub 'kubernetes.io/cluster/${ControlPlane}'
           Value: 'owned'
           PropagateAtLaunch: true
     DependsOn:
