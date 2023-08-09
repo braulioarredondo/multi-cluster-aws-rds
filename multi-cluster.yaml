@@ -8,7 +8,11 @@ Parameters:
   MinNumWorkerNodes:
     Type: Number
     Description: Number of nodes to create
-    Default: 1  
+    Default: 1 
+  DesiredNumWorkerNodes:
+    Type: Number
+    Description: Number of nodes to create
+    Default: 3    
   MaxNumWorkerNodes:
     Type: Number
     Description: Number of nodes to create
@@ -484,11 +488,11 @@ Resources:
         - !Ref WorkerNodesInstanceType
       ScalingConfig:
         MinSize:
-          Ref: NumWorkerNodes
+          Ref: MinNumWorkerNodes
         DesiredSize:
-          Ref: NumWorkerNodes
+          Ref: DesiredNumWorkerNodes
         MaxSize:
-          Ref: NumWorkerNodes
+          Ref: MaxNumWorkerNodes
       Subnets:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
