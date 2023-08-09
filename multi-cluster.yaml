@@ -482,7 +482,7 @@ Resources:
       NodeRole: !GetAtt WorkerNodesRole.Arn
       InstanceTypes:
         - !Ref WorkerNodesInstanceType
-     ScalingConfig:
+      ScalingConfig:
         MinSize:
           Ref: NumWorkerNodes
         DesiredSize:
@@ -490,8 +490,8 @@ Resources:
         MaxSize:
           Ref: NumWorkerNodes
       Subnets:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
+          - !Ref PrivateSubnet1
+          - !Ref PrivateSubnet2
     DependsOn:
       - ControlPlane
       - WorkerNodesRole
