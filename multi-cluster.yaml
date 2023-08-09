@@ -459,45 +459,6 @@ Resources:
   #============================================================================#
   # Worker nodes (auto-scaling group)
   #============================================================================#
-  
-  WorkerNodesAutoScalingGroup:
-    Type: AWS::AutoScaling::AutoScalingGroup
-    UpdatePolicy:
-      AutoScalingRollingUpdate:
-        MinInstancesInService: 1
-        MaxBatchSize: 1
-    Properties:
-      MinSize: !Ref MinNumWorkerNodes
-      MaxSize: !Ref MaxNumWorkerNodes
-      #LaunchConfigurationName: !Ref WorkerNodesLaunchConfiguration
-      LaunchTemplate:
-          LaunchTemplateId: !Ref WorkerNodeLaunchTemplate
-            #LaunchTemplateName: String
-          Version: !GetAtt WorkerNodeLaunchTemplate.LatestVersionNumber
-      VPCZoneIdentifier:
-        - !Ref PrivateSubnet1
-        - !Ref PrivateSubnet2
-      Tags:
-        - Key: Name
-          Value: !Sub '${AWS::StackName}-WorkerNodesAutoScalingGroup'
-          PropagateAtLaunch: true
-        # Without this tag, worker nodes are unable to join the cluster:
-        - Key: !Sub 'kubernetes.io/cluster/${ControlPlane}'
-          Value: 'owned'
-          PropagateAtLaunch: true
-    DependsOn:
-      - WorkerNodeLaunchTemplate
-      - PrivateSubnet1
-      - PrivateSubnet2
-
-  WorkerNodesInstanceProfile:
-    Type: AWS::IAM::InstanceProfile
-    Properties:
-      Roles:
-        - !Ref WorkerNodesRole
-    DependsOn:
-      - WorkerNodesRole
-
   WorkerNodesRole:
     Type: AWS::IAM::Role
     Properties:
@@ -514,86 +475,29 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
   
-  #WorkerNodegroup:
-  #  Type: AWS::EKS::Nodegroup
-  #  Properties:
-  #    ClusterName: !Sub "${AWS::StackName}"
-  #    NodeRole: !GetAtt WorkerNodesRole.Arn
-  #    InstanceTypes:
-  #      - !Ref WorkerNodesInstanceType
-  #   ScalingConfig:
-  #      MinSize:
-  #        Ref: NumWorkerNodes
-  #      DesiredSize:
-  #        Ref: NumWorkerNodes
-  #      MaxSize:
-  #        Ref: NumWorkerNodes
-  #    Subnets:
-  #      - !Ref PrivateSubnet1
-  #      - !Ref PrivateSubnet2
-  #  DependsOn:
-  #    - ControlPlane
-  #    - WorkerNodesRole
-  #    - PrivateSubnet1
-  #    - PrivateSubnet2
-      
-  #WorkerNodesLaunchConfiguration:
-  #  Type: AWS::AutoScaling::LaunchConfiguration
-    # Wait until cluster is ready before launching worker nodes
-  #  Properties:
-  #    AssociatePublicIpAddress: false
-  #    IamInstanceProfile: !Ref WorkerNodesInstanceProfile
-  #    ImageId: !FindInMap
-  #      - EksAmiIds
-  #      - !Ref AWS::Region
-  #      - Standard
-  #    InstanceType: !Ref WorkerNodesInstanceType
-  #    SecurityGroups:
-  #      - !Ref WorkerNodesSecurityGroup
-  #  DependsOn:
-  #    - ControlPlane  
-  #    - WorkerNodesSecurityGroup
-  WorkerNodeLaunchTemplate:
-    Type: AWS::EC2::LaunchTemplate
+  WorkerNodegroup:
+    Type: AWS::EKS::Nodegroup
     Properties:
-      LaunchTemplateName: !Sub '${AWS::StackName}-LaunchTemplate'
-      LaunchTemplateData: 
-        # SecurityGroupIds: 
-        #   - !Ref NodeSecurityGroup
-        TagSpecifications: 
-          -
-            ResourceType: instance
-            Tags:
-              - Key: Name
-                Value: !Sub "${EKSClusterName}-ASG-Node"
-              - Key: KubernetesCluster
-                Value: !Ref EKSClusterName
-              - Key: !Sub 'kubernetes.io/cluster/${ControlPlane}'
-                Value: 'owned'
-        IamInstanceProfile: 
-          Arn: !GetAtt WorkerNodesInstanceProfile.Arn
-        NetworkInterfaces: 
-          - 
-            DeviceIndex: 0
-            AssociatePublicIpAddress: false
-            #SubnetId: !Select [0, !Ref Subnets]
-            Groups: 
-              - !Ref WorkerNodesSecurityGroup 
-        ImageId: !FindInMap
-          - EksAmiIds
-          - !Ref AWS::Region
-          - Standard
-        InstanceType: !Ref WorkerNodesInstanceType
-        BlockDeviceMappings:
-          - DeviceName: /dev/xvda
-            Ebs:
-              VolumeSize: !Ref WorkerNodeVolumeSize
-              VolumeType: gp2
-              DeleteOnTermination: true   
+      ClusterName: !Sub "${AWS::StackName}"
+      NodeRole: !GetAtt WorkerNodesRole.Arn
+      InstanceTypes:
+        - !Ref WorkerNodesInstanceType
+     ScalingConfig:
+        MinSize:
+          Ref: NumWorkerNodes
+        DesiredSize:
+          Ref: NumWorkerNodes
+        MaxSize:
+          Ref: NumWorkerNodes
+      Subnets:
+        - !Ref PrivateSubnet1
+        - !Ref PrivateSubnet2
     DependsOn:
-      - ControlPlane  
-      - WorkerNodesInstanceProfile
-      - WorkerNodesSecurityGroup        
+      - ControlPlane
+      - WorkerNodesRole
+      - PrivateSubnet1
+      - PrivateSubnet2
+   
     #============================================================================#
   # Postgres RDS
   #============================================================================#
