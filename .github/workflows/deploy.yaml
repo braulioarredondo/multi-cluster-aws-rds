@@ -80,8 +80,9 @@ jobs:
           --output text)
           
           sleep 60s
-          cat postgres-cluster-ip-service.yaml | sed "s/{{PG_RDS_ENDPOINT_ADDRESS}}/$PG_RDS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
-          cat redis-cluster-ip-service.yaml | sed "s/{{REDIS_ENDPOINT_ADDRESS}}/$REDIS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
+          cat server-deployment.yaml | sed "s/{{PG_RDS_ENDPOINT_ADDRESS}}/$PG_RDS_ENDPOINT_ADDRESS/g; \
+          s/{{REDIS_ENDPOINT_ADDRESS}}/$REDIS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
+          cat worker-deployment.yaml | sed "s/{{REDIS_ENDPOINT_ADDRESS}}/$REDIS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
           kubectl apply -f ./k8s
 
           sleep 180s
