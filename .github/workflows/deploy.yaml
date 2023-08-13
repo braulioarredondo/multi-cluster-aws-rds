@@ -48,8 +48,7 @@ jobs:
         run: |-
           aws cloudformation create-stack --stack-name multi-cluster \
           --template-body file://multi-cluster.yaml \
-          --parameters ParameterKey=EKSClusterName,ParameterValue=multi-cluster \
-          ParameterKey=MasterUserPassword,ParameterValue=${{ secrets.PGPASSWORD }} \
+          --parameters ParameterKey=EKSClusterName,ParameterValue=multi-cluster \ \
           --capabilities CAPABILITY_NAMED_IAM
 
           aws cloudformation wait stack-create-complete --stack-name multi-cluster
