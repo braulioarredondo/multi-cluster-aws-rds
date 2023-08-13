@@ -24,7 +24,38 @@ Parameters:
   WorkerNodeVolumeSize:
     Type: String
     Description: EC2 ebs size for the worker nodes
-    Default: 20    
+    Default: 20  
+  DBIdentifier:
+    Type: String
+    Default: multi-cluster-db
+    Description: Instance database name
+  DBName:
+    Type: String
+    Default: fibvalues
+    Description: Initial database name
+  AllocatedStorage:
+    Type: String
+    Default: 20
+    Description: Allocated instance storage for Postgres RDS
+  StorageType:
+    Type: String
+    Default: gp2
+    Description: RDS Database Storage class
+  DBInstanceClass:
+    Type: String
+    Default: db.t3.micro
+    Description: Instance type for Postgres RDS
+  EngineVersion:
+    Type: String
+    Default: 15.3
+    Description: Postgres version for DB instance
+  MasterUsername:
+    Type: String
+    Default: postgres
+    Description: Postgres user for DB instance 
+  MasterUserPassword:
+    Type: String
+    Description: Postgres password for DB instance  
   RedisIdentifier:
     Type: String
     Default: multi-cluster-redis
@@ -138,6 +169,17 @@ Resources:
       Properties:
         CacheSubnetGroupName: !Sub "${AWS::StackName}-Redis-Subnet-Group"
         Description: !Sub "${AWS::StackName} Redis subnet group"
+        SubnetIds:
+            - !Ref PrivateSubnet1
+            - !Ref PrivateSubnet2
+      DependsOn: 
+      - PrivateSubnet1
+      - PrivateSubnet2
+  RDSSubnetGroup:
+      Type: "AWS::RDS::DBSubnetGroup"
+      Properties:
+        DBSubnetGroupName: !Sub "${AWS::StackName}-RRDS-Subnet-Group"
+        DBSubnetGroupDescription: !Sub "${AWS::StackName} RDS subnet group"
         SubnetIds:
             - !Ref PrivateSubnet1
             - !Ref PrivateSubnet2
@@ -459,6 +501,29 @@ Resources:
       - WorkerNodesRole
       - PrivateSubnet1
       - PrivateSubnet2
+   
+    #============================================================================#
+  # Postgres RDS
+  #============================================================================#
+  MultiClusterPostgres:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: !Ref DBIdentifier
+      DBName: !Ref DBName
+      AllocatedStorage: !Ref AllocatedStorage
+      StorageType: !Ref StorageType
+      AutoMinorVersionUpgrade: false
+      DBInstanceClass: !Ref DBInstanceClass
+      DBSubnetGroupName: !Ref RDSSubnetGroup
+      Engine: postgres
+      EngineVersion: !Ref EngineVersion
+      MasterUsername: !Ref MasterUsername
+      MasterUserPassword: !Ref MasterUserPassword
+      VPCSecurityGroups: 
+        - !Ref WorkerNodesSecurityGroup
+    DependsOn: 
+      - RDSSubnetGroup
+      - WorkerNodesSecurityGroup
   #============================================================================#
   # Redis Cluster
   #============================================================================#

@@ -19,15 +19,15 @@ spec:
             - containerPort: 5000
           env:
             - name: REDIS_HOST
-              value: redis-cluster-ip-service
+              value: {{REDIS_ENDPOINT_ADDRESS}}
             - name: REDIS_PORT
               value: '6379'
             - name: PGUSER
-              value: postgres
+              value: {{RDS_DB_USERNAME}}
             - name: PGHOST
-              value: postgres-cluster-ip-service
+              value: {{RDS_DB_INSTANCE_HOST}}
             - name: PGPORT
-              value: '5432'
+              value: {{RDS_DB_INSTANCE_PORT}}
             - name: PGDATABASE
               value: postgres
             - name: PGPASSWORD

@@ -17,6 +17,6 @@ spec:
           image: braulioarredondo/multi-worker-k8s
           env:
             - name: REDIS_HOST
-              value: redis-cluster-ip-service
+              value: {{REDIS_ENDPOINT_ADDRESS}}
             - name: REDIS_PORT
               value: '6379'
