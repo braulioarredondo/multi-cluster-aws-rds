@@ -35,3 +35,5 @@ spec:
                 secretKeyRef:
                   name: pgpassword
                   key: PGPASSWORD
+            - name: DB_SSL__REJECT_UNAUTHORIZED
+              value: 'false'

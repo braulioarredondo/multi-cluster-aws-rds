@@ -478,14 +478,25 @@ Resources:
         - arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy
         - arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy
         - arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly
-  
+
+  LaunchTemplateEKS:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub '${AWS::StackName}-Launch-Template'
+      LaunchTemplateData:
+        InstanceType: !Ref WorkerNodesInstanceType
+        SecurityGroupIds:
+          - !GetAtt  WorkerNodesSecurityGroup.GroupId
+    DependsOn:
+      - WorkerNodesSecurityGroup
+      
   WorkerNodegroup:
     Type: AWS::EKS::Nodegroup
     Properties:
       ClusterName: !Sub "${AWS::StackName}"
       NodeRole: !GetAtt WorkerNodesRole.Arn
-      InstanceTypes:
-        - !Ref WorkerNodesInstanceType
+      LaunchTemplate: 
+        Id: !Ref LaunchTemplateEKS
       ScalingConfig:
         MinSize:
           Ref: MinNumWorkerNodes
@@ -497,6 +508,7 @@ Resources:
           - !Ref PrivateSubnet1
           - !Ref PrivateSubnet2
     DependsOn:
+      - LaunchTemplateEKS
       - ControlPlane
       - WorkerNodesRole
       - PrivateSubnet1
