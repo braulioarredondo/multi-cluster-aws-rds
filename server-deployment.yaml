@@ -32,9 +32,11 @@ spec:
             - name: PGDATABASE
               value: postgres
             - name: PGPASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: pgpassword
-                  key: PGPASSWORD
-            - name: DB_SSL__REJECT_UNAUTHORIZED
-              value: 'false'
+              value: postgres  
+            #- name: PGPASSWORD
+            #  valueFrom:
+            #    secretKeyRef:
+            #      name: pgpassword
+            #      key: PGPASSWORD
+            #- name: DB_SSL__REJECT_UNAUTHORIZED
+            #  value: 'false'
