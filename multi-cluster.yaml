@@ -51,7 +51,7 @@ Parameters:
     Description: Postgres version for DB instance
   MasterUsername:
     Type: String
-    Default: postgres
+    Default: 'postgres'
     Description: Postgres user for DB instance 
   MasterUserPassword:
     Type: String

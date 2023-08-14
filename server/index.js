@@ -18,9 +18,7 @@ const pgClient = new Pool({
   database: keys.pgDatabase,
   password: keys.pgPassword,
   port: keys.pgPort,
-  ssl: {
-    ca: [fs.readFileSync(path.resolve('./us-east-1-bundle.pem'), 'ascii')]
-  }
+  ssl: true
 });
 
 pgClient.on("connect", (client) => {
