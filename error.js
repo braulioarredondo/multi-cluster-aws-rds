@@ -26,3 +26,18 @@ error: no pg_hba.conf entry for host "10.100.55.221", user "postgres", database 
 }
 
 Node.js v20.5.1
+
+
+
+Listening
+/app/node_modules/pg-pool/index.js:45
+    Error.captureStackTrace(err);
+          ^
+
+Error: self-signed certificate in certificate chain
+    at /app/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5) {
+  code: 'SELF_SIGNED_CERT_IN_CHAIN'
+}
+
+Node.js v20.5.1
