@@ -12,7 +12,7 @@ spec:
       labels:
         component: server
     spec:
-      restartPolicy: Never
+      restartPolicy: Always
       containers:
         - name: server
           image: braulioarredondo/multi-server-k8s
