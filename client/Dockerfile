@@ -7,6 +7,7 @@ WORKDIR /home/node/app
  
 COPY --chown=node:node ./package.json ./
 RUN npm install
+RUN export NODE_TLS_REJECT_UNAUTHORIZED=0
 COPY --chown=node:node ./ ./
  
 RUN npm run build

@@ -13,27 +13,27 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      #- name: Build Images
-        #run:  |-
-        #  docker build -t braulioarredondo/multi-client-k8s:latest -t braulioarredondo/multi-client-k8s:${{ env.SHA }} -f ./client/Dockerfile ./client
-        #  docker build -t braulioarredondo/multi-server-k8s:latest -t braulioarredondo/multi-server-k8s:${{ env.SHA }} -f ./server/Dockerfile ./server
-        #  docker build -t braulioarredondo/multi-worker-k8s:latest -t braulioarredondo/multi-worker-k8s:${{ env.SHA }} -f ./worker/Dockerfile ./worker
+      - name: Build Images
+        run:  |-
+          docker build -t braulioarredondo/multi-client-k8s-rds:latest -t braulioarredondo/multi-client-k8s-rds:${{ env.SHA }} -f ./client/Dockerfile ./client
+          docker build -t braulioarredondo/multi-server-k8s-rds:latest -t braulioarredondo/multi-server-k8s-rds:${{ env.SHA }} -f ./server/Dockerfile ./server
+          docker build -t braulioarredondo/multi-worker-k8s-rds:latest -t braulioarredondo/multi-worker-k8s-rds:${{ env.SHA }} -f ./worker/Dockerfile ./worker
 
-      #- name: Test
-        #run: |-
-        #  docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
-        #  docker build -t braulioarredondo/react-test -f ./client/Dockerfile.dev ./client
-        #  docker run -e CI=true braulioarredondo/react-test npm test
+      - name: Test
+        run: |-
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t braulioarredondo/react-test -f ./client/Dockerfile.dev ./client
+          docker run -e CI=true braulioarredondo/react-test npm test
 
-      #- name: Push
-        #run: |-
-        #  docker push braulioarredondo/multi-client-k8s:latest
-        #  docker push braulioarredondo/multi-server-k8s:latest
-        #  docker push braulioarredondo/multi-worker-k8s:latest
+      - name: Push
+        run: |-
+          docker push braulioarredondo/multi-client-k8s-rds:latest
+          docker push braulioarredondo/multi-server-k8s-rds:latest
+          docker push braulioarredondo/multi-worker-k8s-rds:latest
 
-        #  docker push braulioarredondo/multi-client-k8s:${{ env.SHA }}
-        #  docker push braulioarredondo/multi-server-k8s:${{ env.SHA }}
-        #  docker push braulioarredondo/multi-worker-k8s:${{ env.SHA }}
+          docker push braulioarredondo/multi-client-k8s-rds:${{ env.SHA }}
+          docker push braulioarredondo/multi-server-k8s-rds:${{ env.SHA }}
+          docker push braulioarredondo/multi-worker-k8s-rds:${{ env.SHA }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -80,6 +80,9 @@ jobs:
           --output text)
           
           sleep 60s
+          cat rds-service.yaml | sed "s/{{PG_RDS_ENDPOINT_ADDRESS}}/$PG_RDS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
+          cat redis-service.yaml | sed "s/{{REDIS_ENDPOINT_ADDRESS}}/$REDIS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
+
           cat server-deployment.yaml | sed "s/{{PG_RDS_ENDPOINT_ADDRESS}}/$PG_RDS_ENDPOINT_ADDRESS/g; \
           s/{{REDIS_ENDPOINT_ADDRESS}}/$REDIS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
           cat worker-deployment.yaml | sed "s/{{REDIS_ENDPOINT_ADDRESS}}/$REDIS_ENDPOINT_ADDRESS/g" | kubectl apply -f -
