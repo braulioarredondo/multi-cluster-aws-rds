@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: worker
-          image: braulioarredondo/multi-worker-k8s
+          image: braulioarredondo/multi-worker-k8s-rds
           env:
             - name: REDIS_HOST
               value: {{REDIS_ENDPOINT_ADDRESS}}

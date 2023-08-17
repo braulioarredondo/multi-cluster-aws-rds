@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: server
-          image: braulioarredondo/multi-server-k8s
+          image: braulioarredondo/multi-server-k8s-rds
           ports:
             - containerPort: 5000
           env:

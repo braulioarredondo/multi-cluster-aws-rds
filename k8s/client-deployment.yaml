@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: client
-        image: braulioarredondo/multi-client-k8s
+        image: braulioarredondo/multi-client-k8s-rds
         ports:
           - containerPort: 3000
