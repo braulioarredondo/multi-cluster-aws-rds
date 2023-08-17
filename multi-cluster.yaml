@@ -530,7 +530,7 @@ Resources:
       Engine: postgres
       EngineVersion: !Ref EngineVersion
       MasterUsername: !Ref MasterUsername
-      MasterUserPassword: postgres #!Ref MasterUserPassword
+      MasterUserPassword: !Ref MasterUserPassword
       VPCSecurityGroups: 
         - !Ref WorkerNodesSecurityGroup
     DependsOn: 
