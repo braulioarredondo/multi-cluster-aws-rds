@@ -29,13 +29,13 @@ spec:
             - name: PGPORT
               value: '5432'
             - name: PGDATABASE
-              value: postgres  
-            - name:  NODE_TLS_REJECT_UNAUTHORIZED
-              value: '0'
-            - name: DB_SSL__REJECT_UNAUTHORIZED
-              value: 'false'          
+              value: postgres
             - name: PGPASSWORD
               valueFrom:
                 secretKeyRef:
                   name: pgpassword
                   key: PGPASSWORD
+            - name:  NODE_TLS_REJECT_UNAUTHORIZED
+              value: '0'
+            - name: DB_SSL__REJECT_UNAUTHORIZED
+              value: 'false'
