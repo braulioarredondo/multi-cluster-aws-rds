@@ -107,7 +107,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !FindInMap [ VpcIpRanges, Option1, PublicSubnet2 ]
-      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      AvailabilityZone: us-east-1b #!Select [ 1, !GetAZs '' ]
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-PublicSubnet2"
@@ -135,7 +135,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !FindInMap [ VpcIpRanges, Option1, PrivateSubnet2 ]
-      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      AvailabilityZone: us-east-1b #!Select [ 1, !GetAZs '' ]
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-PrivateSubnet2"
@@ -159,7 +159,7 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       CidrBlock: !FindInMap [ VpcIpRanges, Option1, PersistenceSubnet2 ]
-      AvailabilityZone: !Select [ 1, !GetAZs '' ]
+      AvailabilityZone: us-east-1b #!Select [ 1, !GetAZs '' ]
       Tags:
         - Key: Name
           Value: !Sub "${AWS::StackName}-PersistenceSubnet2"
