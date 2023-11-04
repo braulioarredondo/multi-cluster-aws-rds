@@ -59,7 +59,7 @@ Workflow builds and tests the docker images, create a cloudformation stack and f
 ![Workflow](https://raw.githubusercontent.com/braulioarredondo/multi-cluster-aws-rds/master/images/workflow.png)
 ## Cloudformation Designer
 
-![Designer](![Workflow](https://raw.githubusercontent.com/braulioarredondo/multi-cluster-aws-rds/master/images/multi-cluster-rds.png))
+![Designer](![Workflow](https://raw.githubusercontent.com/braulioarredondo/multi-cluster-aws-rds/master/images/multi-cluster-rds.png)
 
 
 ## 🛠 Skills
