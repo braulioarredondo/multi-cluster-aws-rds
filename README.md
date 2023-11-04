@@ -67,7 +67,7 @@ Javascript, AWS, IAC, CloudFormation, Docker, EKS, K8s
 
 
 ## 🔗 Links
-[![website](https://img.shields.io/badge/Braulio_Arredondo-black?style=for-the-badge&logo=read.cv)](https://katherineoelsner.com/)
+[![website](https://img.shields.io/badge/Braulio_Arredondo-black?style=for-the-badge&logo=read.cv)](https://braulioarredondo.com/)
 [![linkedin](https://img.shields.io/badge/linkedin-0A66C2?style=for-the-badge&logo=linkedin&logoColor=white)](https://www.linkedin.com/in/braulio-arredondo)
 
 
